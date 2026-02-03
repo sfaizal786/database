@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FILE UPLOAD</title>
+<style>
+body{
+    background-color: blue;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-size: large;
+    color: yellowgreen;
+    opacity: 0.9
+}
+h1{
+    font-weight: bold;
+    margin: auto;
+    text-align: center;
+    margin-top: 5%;
+    text-shadow: 2px 2px 2px black;
+}
+form{
+    margin: auto;
+    text-align: center;
+    margin-top: 2%;
+}
+    button{
+        background-color: green;
+        color: white;
+        font-size: medium;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+    }
+    button:hover{
+        background-color: darkgreen;
+    }
+    input{
+        font-size: medium;
+        padding: 5px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+    }
+
+</style>
+</head>
+<body>
+    <h1>META_INSYT Database management system <mark>(upload CSV verified email list with header Email)</mark>
+        <sup>by faizal</sup>
+    </h1>
+
+
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="emailList" accept=".csv" required>
+        <button type="submit">Upload Verified Email List</button>
+    </form>
+</body>
+</html>
