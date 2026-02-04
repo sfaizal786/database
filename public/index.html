@@ -1,60 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FILE UPLOAD</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>META_INSYT Database</title>
+
 <style>
+
+/* ===== BODY STYLE ===== */
 body{
-    background-color: blue;
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-    font-size: large;
-    color: yellowgreen;
-    opacity: 0.9
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    color:white;
 }
+
+/* ===== MAIN CONTAINER ===== */
+.container{
+    width:900px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:25px;
+}
+
+/* ===== CARD STYLE ===== */
+.card{
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    border-radius:15px;
+    padding:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+    animation:fadeUp 0.7s ease;
+    transition:0.3s;
+}
+
+.card:hover{
+    transform: translateY(-5px);
+}
+
+/* ===== TITLE ===== */
 h1{
-    font-weight: bold;
-    margin: auto;
-    text-align: center;
-    margin-top: 5%;
-    text-shadow: 2px 2px 2px black;
+    position:absolute;
+    top:30px;
+    text-align:center;
+    width:100%;
+    font-size:28px;
 }
-form{
-    margin: auto;
-    text-align: center;
-    margin-top: 2%;
+
+h2{
+    text-align:center;
+    margin-bottom:20px;
 }
-    button{
-        background-color: green;
-        color: white;
-        font-size: medium;
-        padding: 10px;
-        border-radius: 5px;
-        border: none;
-        cursor: pointer;
+
+/* ===== INPUT ===== */
+input,select{
+    width:100%;
+    padding:12px;
+    border-radius:8px;
+    border:none;
+    margin-top:10px;
+    font-size:15px;
+}
+
+/* ===== BUTTON ===== */
+button{
+    margin-top:15px;
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:linear-gradient(45deg,#00c6ff,#0072ff);
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.05);
+    box-shadow:0 5px 15px rgba(0,0,0,0.5);
+}
+
+/* ===== ANIMATION ===== */
+@keyframes fadeUp{
+    from{
+        opacity:0;
+        transform:translateY(20px);
     }
-    button:hover{
-        background-color: darkgreen;
+    to{
+        opacity:1;
+        transform:translateY(0px);
     }
-    input{
-        font-size: medium;
-        padding: 5px;
-        border-radius: 5px;
-        border: none;
-        cursor: pointer;
-    }
+}
 
 </style>
 </head>
+
 <body>
-    <h1>META_INSYT Database management system <mark>(upload CSV verified email list with header Email)</mark>
-        <sup>by faizal</sup>
-    </h1>
 
+<h1>🚀 META_INSYT Database Management System <br>
+<small>Upload & Download Verified Emails</small>
+</h1>
 
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="emailList" accept=".csv" required>
-        <button type="submit">Upload Verified Email List</button>
-    </form>
+<div class="container">
+
+    <!-- ================= UPLOAD SECTION ================= -->
+    <div class="card">
+        <h2>📤 Upload Verified Emails</h2>
+
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <label>Select CSV File</label>
+            <input type="file" name="emailList" accept=".csv" required>
+            <button type="submit">Upload CSV</button>
+        </form>
+    </div>
+
+    <!-- ================= DOWNLOAD SECTION ================= -->
+    <div class="card">
+        <h2>📥 Download Emails</h2>
+
+        <!-- FULL DOWNLOAD -->
+        <form action="/download-all" method="get">
+            <button type="submit">⬇ Full Database Download</button>
+        </form>
+
+        <hr style="margin:20px 0;opacity:0.3">
+
+        <!-- DOMAIN DOWNLOAD -->
+        <form action="/download-domain" method="get">
+            <label>Download By Domain</label>
+            <input type="text" name="domain" placeholder="example.com" required>
+            <button type="submit">⬇ Download Domain Emails</button>
+        </form>
+    </div>
+
+</div>
+
 </body>
 </html>
