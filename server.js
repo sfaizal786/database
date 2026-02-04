@@ -45,8 +45,8 @@ app.post("/upload", upload.single("emailList"), (req, res) => {
   const oldpath = req.file.path;
 
   let totalRows = 0;
-  let created = 1;
-  let duplicates = 1;
+  let created = 0;
+  let duplicates = 0;
 
   fs.createReadStream(oldpath)
     .pipe(csv())
@@ -207,6 +207,31 @@ app.get("/download-domain", async (req, res) => {
   }
 });
 
+// =====================================================
+// 📥 Delete invalid emails
+// =====================================================
+app.post("/remove-invalid-csv", upload.single("emailList"), async (req,res)=>{
+
+  const filePath = req.file.path;
+  const emails=[];
+
+  fs.createReadStream(filePath)
+  .pipe(csv())
+  .on("data",(row)=>{
+      const email=row.email?.trim() || Object.values(row)[0]?.trim();
+      if(email) emails.push(email.toLowerCase());
+  })
+  .on("end",async ()=>{
+
+      const result=await ValidatedEmail.deleteMany({
+          email:{ $in: emails }
+      });
+
+      fs.unlink(filePath,()=>{});
+
+      res.json({ deletedCount: result.deletedCount });
+  });
+});
 
 // =====================================================
 // START SERVER
