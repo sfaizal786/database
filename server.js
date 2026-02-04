@@ -58,9 +58,8 @@ app.post("/upload", upload.single("emailList"), (req, res) => {
 
       try {
 
-        const email = Object.values(row)[0]?.trim();
-        const name = Object.values(row)[1]?.trim() || "";
-
+       const email = row.email?.trim();
+       const name = row.name?.trim() || "";
         // ✅ Skip invalid rows
         if (!email || !email.includes("@")) {
           this.resume();
@@ -214,3 +213,4 @@ app.get("/download-domain", async (req, res) => {
 app.listen(Port, () => {
   console.log(`server running on port ${Port}`);
 });
+
