@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 
 import { connectMongo } from "./mongodb/mongoconnect.js";
 import { ValidatedEmail } from "./mongodb/model/validemail.js";
+import { InvalidatedEmail } from "./mongodb/model/invalidmail.js";
 
 const app = express();
 const Port = 8000;
@@ -210,28 +211,155 @@ app.get("/download-domain", async (req, res) => {
 // =====================================================
 // 📥 Delete invalid emails
 // =====================================================
-app.post("/remove-invalid-csv", upload.single("emailList"), async (req,res)=>{
+app.post("/remove-invalid-csv", upload.single("emailList"), async (req, res) => {
 
-  const filePath = req.file.path;
-  const emails=[];
+  try {
 
-  fs.createReadStream(filePath)
-  .pipe(csv())
-  .on("data",(row)=>{
-      const email=row.email?.trim() || Object.values(row)[0]?.trim();
-      if(email) emails.push(email.toLowerCase());
-  })
-  .on("end",async ()=>{
+    const filePath = req.file.path;
+    const emails = [];
 
-      const result=await ValidatedEmail.deleteMany({
-          email:{ $in: emails }
+    // =====================
+    // READ CSV
+    // =====================
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on("data", (row) => {
+        const email = row.email?.trim() || Object.values(row)[0]?.trim();
+        if (email) emails.push(email.toLowerCase());
+      })
+      .on("end", async () => {
+
+        // =====================
+        // FIND EXISTING VALID EMAILS
+        // =====================
+        const existingValid = await ValidatedEmail.find({
+          email: { $in: emails }
+        }).lean();
+
+        const existingEmailsSet = new Set(existingValid.map(e => e.email));
+
+        // =====================
+        // PREPARE INVALID RECORDS
+        // =====================
+        const invalidDocs = emails.map(email => {
+
+          const found = existingValid.find(v => v.email === email);
+
+          return {
+            email,
+            name: found?.name || "Unknown",
+            domain: email.split("@")[1] || "",
+            status: false,
+            smtpCode: 550,
+            validatedAt: new Date()
+          };
+        });
+
+        // =====================
+        // INSERT INTO InvalidatedEmail
+        // =====================
+        await InvalidatedEmail.insertMany(invalidDocs, { ordered: false }).catch(()=>{});
+
+        // =====================
+        // DELETE FROM ValidatedEmail
+        // =====================
+        const deleted = await ValidatedEmail.deleteMany({
+          email: { $in: emails }
+        });
+
+        // =====================
+        // CLEAN FILE
+        // =====================
+        fs.unlink(filePath, () => {});
+
+        res.json({
+          movedToInvalid: invalidDocs.length,
+          removedFromValid: deleted.deletedCount
+        });
+
       });
 
-      fs.unlink(filePath,()=>{});
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Remove invalid process failed");
+  }
 
-      res.json({ deletedCount: result.deletedCount });
-  });
 });
+
+// =====================================================
+// 📄 DOWNLOAD EMAILS USING DOMAIN CSV
+// =====================================================
+app.post("/download-domain-csv", upload.single("domainFile"), async (req, res) => {
+
+  try {
+
+    if (!req.file) {
+      return res.status(400).send("No CSV uploaded");
+    }
+
+    const filePath = req.file.path;
+    const domains = [];
+
+    // =====================
+    // READ DOMAIN CSV
+    // =====================
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on("data", (row) => {
+
+        // supports header: domain OR first column
+        const domain = row.domain?.trim() || Object.values(row)[0]?.trim();
+
+        if (domain) {
+          domains.push(domain.toLowerCase());
+        }
+      })
+      .on("end", async () => {
+
+        if (!domains.length) {
+          fs.unlink(filePath, () => {});
+          return res.status(400).send("No domains found in CSV");
+        }
+
+        // =====================
+        // FIND EMAILS BY DOMAIN
+        // =====================
+        const emails = await ValidatedEmail.find({
+          domain: { $in: domains },
+          status: true
+        }).lean();
+
+        // =====================
+        // STREAM CSV DOWNLOAD (NO TEMP FILE 🔥)
+        // =====================
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=domain_emails_${Date.now()}.csv`
+        );
+
+        res.write("Email,Name,Domain,Status,SmtpCode,ValidatedAt\n");
+
+        emails.forEach(e => {
+          res.write(
+            `${e.email || ""},${e.name || ""},${e.domain || ""},${e.status},${e.smtpCode},${e.validatedAt}\n`
+          );
+        });
+
+        res.end();
+
+        // cleanup upload
+        fs.unlink(filePath, () => {});
+      });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Domain CSV download failed");
+  }
+
+});
+
+
 
 // =====================================================
 // START SERVER
