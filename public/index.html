@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"/>
 
 <style>
-
 body{
     margin:0;
     height:100vh;
@@ -21,9 +20,9 @@ body{
 }
 
 .container{
-    width:1000px;
+    width:1200px;
     display:grid;
-    grid-template-columns:1fr 1fr 1fr;
+    grid-template-columns:1fr 1fr 1fr 1fr;
     gap:25px;
 }
 
@@ -33,7 +32,6 @@ body{
     border-radius:15px;
     padding:30px;
     box-shadow:0 10px 30px rgba(0,0,0,0.4);
-    animation:fadeUp 0.7s ease;
 }
 
 h1{
@@ -41,10 +39,6 @@ h1{
     top:30px;
     text-align:center;
     width:100%;
-}
-
-h2{
-    text-align:center;
 }
 
 input{
@@ -65,18 +59,12 @@ button{
     color:white;
     cursor:pointer;
 }
-
-@keyframes fadeUp{
-    from{opacity:0;transform:translateY(20px);}
-    to{opacity:1;transform:translateY(0);}
-}
-
 </style>
 </head>
 
 <body>
 
-<h1>🚀 META_INSYT Database Management System(uplaod csv with email and name Header)</h1>
+<h1>🚀 META_INSYT Database Management System</h1>
 
 <div class="container">
 
@@ -89,7 +77,6 @@ button{
 <button type="submit">Upload CSV</button>
 </form>
 </div>
-
 
 <!-- ================= DOWNLOAD SECTION ================= -->
 <div class="card">
@@ -107,6 +94,15 @@ button{
 </form>
 </div>
 
+<!-- ================= DOMAIN CSV DOWNLOAD ================= -->
+<div class="card">
+<h2>📄 Upload Domain CSV & Download</h2>
+
+<form id="domainCsvForm">
+<input type="file" name="domainFile" accept=".csv" required>
+<button type="submit">Find Domains & Download Emails</button>
+</form>
+</div>
 
 <!-- ================= REMOVE INVALID CSV ================= -->
 <div class="card">
@@ -118,8 +114,9 @@ button{
 </form>
 </div>
 
-</div>
 
+
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
@@ -129,15 +126,12 @@ button{
 // UPLOAD CSV
 // =======================
 document.getElementById("uploadForm").addEventListener("submit", async function(e){
-
     e.preventDefault();
-
-    const formData = new FormData(this);
+    const formData=new FormData(this);
 
     try{
-
-        const res = await fetch("/upload",{method:"POST",body:formData});
-        const data = await res.json();
+        const res=await fetch("/upload",{method:"POST",body:formData});
+        const data=await res.json();
 
         Toastify({
             text:`✅ Created: ${data.created} | ⚠️ Duplicates: ${data.duplicates}`,
@@ -146,46 +140,62 @@ document.getElementById("uploadForm").addEventListener("submit", async function(
             position:"right",
             style:{background:"linear-gradient(to right,#00b09b,#96c93d)"}
         }).showToast();
-
     }catch{
-        Toastify({
-            text:"❌ Upload Failed",
-            duration:4000,
-            style:{background:"red"}
-        }).showToast();
+        Toastify({text:"❌ Upload Failed",duration:4000,style:{background:"red"}}).showToast();
     }
-
 });
 
-
 // =======================
-// REMOVE EMAILS CSV
+// REMOVE EMAIL CSV
 // =======================
 document.getElementById("removeForm").addEventListener("submit", async function(e){
-
     e.preventDefault();
-
-    const formData = new FormData(this);
+    const formData=new FormData(this);
 
     try{
-
-        const res = await fetch("/remove-invalid-csv",{method:"POST",body:formData});
-        const data = await res.json();
+        const res=await fetch("/remove-invalid-csv",{method:"POST",body:formData});
+        const data=await res.json();
 
         Toastify({
-            text:`🧹 Removed ${data.deletedCount} emails from DB`,
+            text:`🧹 Removed ${data.removedFromValid} emails`,
             duration:4000,
             gravity:"top",
             position:"right",
             style:{background:"linear-gradient(to right,#ff416c,#ff4b2b)"}
         }).showToast();
+    }catch{
+        Toastify({text:"❌ Remove Failed",duration:4000,style:{background:"red"}}).showToast();
+    }
+});
+
+// =======================
+// DOMAIN CSV DOWNLOAD
+// =======================
+document.getElementById("domainCsvForm").addEventListener("submit", async function(e){
+
+    e.preventDefault();
+    const formData=new FormData(this);
+
+    try{
+
+        const res=await fetch("/download-domain-csv",{method:"POST",body:formData});
+
+        const blob=await res.blob();
+        const url=window.URL.createObjectURL(blob);
+
+        const a=document.createElement("a");
+        a.href=url;
+        a.download="domain_emails.csv";
+        a.click();
+
+        Toastify({
+            text:"📥 Download started",
+            duration:3000,
+            style:{background:"linear-gradient(to right,#00c6ff,#0072ff)"}
+        }).showToast();
 
     }catch{
-        Toastify({
-            text:"❌ Remove Failed",
-            duration:4000,
-            style:{background:"red"}
-        }).showToast();
+        Toastify({text:"❌ Domain Download Failed",duration:4000,style:{background:"red"}}).showToast();
     }
 
 });
@@ -194,4 +204,3 @@ document.getElementById("removeForm").addEventListener("submit", async function(
 
 </body>
 </html>
-
